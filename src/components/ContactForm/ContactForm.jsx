@@ -2,13 +2,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Formik, ErrorMessage } from 'formik';
 import { object, string } from 'yup';
-// import { nanoid } from 'nanoid';
+
 import {
   StyledForm,
   StyledLabel,
   StyledInput,
   StyledButton,
 } from './ContactFormStyled';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact } from 'redux/contactsSlice';
+import { getContacts } from 'redux/selectors';
 
 const nameRegex = /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/;
 
@@ -32,18 +35,35 @@ const schema = object().shape({
     .required(),
 });
 
-const initialValues = {
-  name: '',
-  number: '',
-};
+export const ContactForm = () => {
+  const contacts = useSelector(getContacts);
+  const dispatch = useDispatch();
 
-export const ContactForm = ({ onSubmit }) => {
+  const initialValues = {
+    name: '',
+    number: '',
+  };
+
+  const handleSubmit = (values, { resetForm }) => {
+    const check = contacts.filter(
+      contact => contact.name.toLowerCase() === values.name.toLowerCase()
+    );
+    if (check.length) {
+      alert(`${values.name} is already in contacts`);
+    } else {
+      dispatch(addContact(values));
+      resetForm({
+        name: '',
+        number: '',
+      });
+    }
+  };
   return (
     <Formik
-      initialValues={initialValues}
       validationSchema={schema}
+      initialValues={initialValues}
       onSubmit={(values, actions) => {
-        onSubmit(values, actions);
+        handleSubmit(values, actions);
       }}
     >
       <StyledForm autoComplete=" off">
@@ -64,5 +84,5 @@ export const ContactForm = ({ onSubmit }) => {
 };
 
 ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
+  contacts: PropTypes.object,
 };
